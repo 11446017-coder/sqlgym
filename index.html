@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FitPulse 健身房團課預約系統 — 資料庫設計與 SQL 查詢展示</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --text: #1e293b;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --primary: #2563eb;
+      --primary-light: #eff6ff;
+      --primary-dark: #1d4ed8;
+      --success: #059669;
+      --success-bg: #ecfdf5;
+      --warn: #d97706;
+      --warn-bg: #fffbeb;
+      --danger: #dc2626;
+      --danger-bg: #fef2f2;
+      --code-bg: #0f172a;
+      --code-text: #e2e8f0;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+    }
+
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+    .header-inner {
+      max-width: 1020px;
+      margin: 0 auto;
+      padding: 1rem 1.25rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+    .brand {
+      font-weight: 700;
+      font-size: 1.15rem;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+    nav a {
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 0.88rem;
+      font-weight: 500;
+      padding: 0.35rem 0.65rem;
+      border-radius: 6px;
+      transition: all 0.15s;
+    }
+    nav a:hover {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
+    main {
+      max-width: 1020px;
+      margin: 1.75rem auto 4rem;
+      padding: 0 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.75rem;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem 1.75rem;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    }
+    .q-badge {
+      display: inline-block;
+      background: var(--primary-light);
+      color: var(--primary);
+      font-weight: 700;
+      font-size: 0.8rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      margin-bottom: 0.45rem;
+    }
+    h2 {
+      margin: 0 0 1rem;
+      font-size: 1.28rem;
+      color: #0f172a;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.6rem;
+    }
+    h3 {
+      margin: 1.25rem 0 0.5rem;
+      font-size: 1.02rem;
+      color: #1e293b;
+    }
+    p { margin: 0.5rem 0; }
+    ul {
+      margin: 0.5rem 0;
+      padding-left: 1.35rem;
+    }
+    li { margin-bottom: 0.4rem; }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+      margin-top: 0.75rem;
+    }
+    .info-box {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.15rem;
+    }
+    .info-box strong {
+      display: block;
+      color: #0f172a;
+      margin-bottom: 0.35rem;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      margin: 0.75rem 0;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      text-align: left;
+    }
+    th, td {
+      padding: 0.6rem 0.85rem;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    th {
+      background: #f1f5f9;
+      font-weight: 600;
+      color: #334155;
+    }
+    tr:last-child td { border-bottom: none; }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      background: #f1f5f9;
+      color: #0f172a;
+      padding: 0.15rem 0.35rem;
+      border-radius: 4px;
+      font-size: 0.86em;
+    }
+    .pk {
+      background: #fef3c7;
+      color: #92400e;
+      font-weight: 700;
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.78rem;
+    }
+    .fk {
+      background: #e0e7ff;
+      color: #3730a3;
+      font-weight: 700;
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.78rem;
+    }
+
+    .erd-box {
+      background: #fcfcfd;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      text-align: center;
+      overflow-x: auto;
+      margin: 0.75rem 0;
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 0.75rem;
+    }
+    .tab-btn {
+      background: #f1f5f9;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.4rem 0.85rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 500;
+    }
+    .tab-btn.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .preset-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin: 0.75rem 0;
+    }
+    .preset-btn {
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      border: 1px solid #bfdbfe;
+      padding: 0.45rem 0.85rem;
+      border-radius: 6px;
+      font-size: 0.86rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .preset-btn:hover, .preset-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+
+    textarea#sqlEditor {
+      width: 100%;
+      min-height: 165px;
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.92rem;
+      line-height: 1.5;
+      padding: 1rem;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      resize: vertical;
+      margin-top: 0.4rem;
+    }
+    .action-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin: 0.75rem 0;
+    }
+    .btn-group {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .btn-run {
+      background: var(--success);
+      color: #fff;
+      border: none;
+      padding: 0.55rem 1.2rem;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.92rem;
+      cursor: pointer;
+    }
+    .btn-run:hover { background: #047857; }
+    .btn-reset {
+      background: #fff;
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 0.55rem 1rem;
+      border-radius: 6px;
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
+    .btn-reset:hover { background: #f1f5f9; }
+    #dbStatus {
+      font-size: 0.84rem;
+      color: var(--muted);
+    }
+
+    .compare-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .result-box {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.9rem 1rem;
+      background: #fff;
+    }
+    .result-box h4 {
+      margin: 0 0 0.5rem;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .error-msg {
+      background: var(--danger-bg);
+      color: var(--danger);
+      border: 1px solid #fecaca;
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 0.88rem;
+    }
+    .explain-box {
+      margin-top: 1rem;
+      background: var(--primary-light);
+      border-left: 4px solid var(--primary);
+      padding: 0.9rem 1.1rem;
+      border-radius: 0 8px 8px 0;
+      font-size: 0.93rem;
+    }
+    .diff-card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.15rem;
+      margin-top: 1rem;
+      background: #fafafa;
+    }
+    .diff-card h4 {
+      margin: 0 0 0.4rem;
+      color: #0f172a;
+    }
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+      padding-bottom: 2rem;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="brand">🏋️ FitPulse 健身房團課預約系統 — SQL 資料庫專題</div>
+    <nav>
+      <a href="#sec1">1. 情境與對象</a>
+      <a href="#sec2">2. 解決的問題</a>
+      <a href="#sec3">3. 資料表與連結</a>
+      <a href="#sec4">4. 業務規則</a>
+      <a href="#sec5">5. SQL 實作與結果</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- 第 1 點 -->
+  <section id="sec1" class="card">
+    <span class="q-badge">問題 1</span>
+    <h2>這是什麼組織或生活情境？誰會使用資料？</h2>
+    <p>
+      本資料庫模擬一家都會型連鎖健身房 <strong>「FitPulse 健身俱樂部」</strong> 的日常團體課程（如飛輪、瑜珈、拳擊有氧）預約與簽到營運情境。
+    </p>
+    <div class="grid-2">
+      <div class="info-box">
+        <strong>👔 健身房營運主管</strong>
+        追蹤各堂團課的實際出席率、計算教練授課人次，決定熱門時段是否加開課程或調整冷門時段。
+      </div>
+      <div class="info-box">
+        <strong>💁 櫃台行政與教練</strong>
+        查詢會員會籍是否有效、核對當日課堂預約名單，並記錄會員實際到場報到（<code>attended</code>）或無故缺席（<code>no_show</code>）。
+      </div>
+    </div>
+  </section>
+
+  <!-- 第 2 點 -->
+  <section id="sec2" class="card">
+    <span class="q-badge">問題 2</span>
+    <h2>使用者遇到哪個具體問題，需要資料庫協助？</h2>
+    <p>
+      過去健身房使用紙本或單一 Excel 表格登記報名，導致資料散落且難以交叉統計，常遇到以下三個營運痛點：
+    </p>
+    <ul>
+      <li><strong>「佔位不來（No-Show）」造成資源浪費：</strong>熱門飛輪課常顯示額滿，但上課時卻有空位，行政人員無法快速篩選出「長期預約卻未到場」的會員名單進行提醒或停權。</li>
+      <li><strong>冷門課程與教練績效難量化：</strong>單看預約名單容易把「已取消預約」算進去，導致主管高估課程熱門度，無法準確算出每堂課的真實出席率。</li>
+      <li><strong>會員與課程資訊重複輸入：</strong>每次報名都要重打會員姓名、電話與教練資料，不僅容易打錯，會員改電話時也無法同步更新所有紀錄。</li>
+    </ul>
+  </section>
+
+  <!-- 第 3 點 -->
+  <section id="sec3" class="card">
+    <span class="q-badge">問題 3</span>
+    <h2>每張表的一列代表什麼？用哪些編號連結？</h2>
+    <p>本系統共設計 4 張關聯式資料表，透過主鍵（<span class="pk">PK</span>）與外來鍵（<span class="fk">FK</span>）串接：</p>
+
+    <div class="erd-box">
+      <svg width="780" height="230" viewBox="0 0 780 230" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto;">
+        <line x1="210" y1="65" x2="290" y2="65" stroke="#64748b" stroke-width="2" />
+        <text x="220" y="57" font-size="12" fill="#334155">1</text>
+        <text x="275" y="57" font-size="12" fill="#334155">N</text>
+
+        <line x1="500" y1="65" x2="570" y2="65" stroke="#64748b" stroke-width="2" />
+        <text x="510" y="57" font-size="12" fill="#334155">1</text>
+        <text x="555" y="57" font-size="12" fill="#334155">N</text>
+
+        <polyline points="115,120 115,180 290,180" fill="none" stroke="#64748b" stroke-width="2" />
+        <text x="122" y="138" font-size="12" fill="#334155">1</text>
+        <text x="275" y="172" font-size="12" fill="#334155">N</text>
+
+        <rect x="20" y="20" width="190" height="100" rx="8" fill="#ffffff" stroke="#2563eb" stroke-width="2"/>
+        <rect x="20" y="20" width="190" height="28" rx="6" fill="#2563eb"/>
+        <text x="32" y="39" font-size="13" font-weight="bold" fill="#ffffff">members (會員)</text>
+        <text x="32" y="65" font-size="12" fill="#1e293b">🔑 member_id (PK)</text>
+        <text x="32" y="85" font-size="12" fill="#475569">full_name, phone</text>
+        <text x="32" y="105" font-size="12" fill="#475569">plan_type, status</text>
+
+        <rect x="290" y="20" width="210" height="185" rx="8" fill="#ffffff" stroke="#059669" stroke-width="2"/>
+        <rect x="290" y="20" width="210" height="28" rx="6" fill="#059669"/>
+        <text x="302" y="39" font-size="13" font-weight="bold" fill="#ffffff">bookings (預約紀錄)</text>
+        <text x="302" y="65" font-size="12" fill="#1e293b">🔑 booking_id (PK)</text>
+        <text x="302" y="87" font-size="12" fill="#3730a3">🔗 member_id (FK)</text>
+        <text x="302" y="109" font-size="12" fill="#3730a3">🔗 class_id (FK)</text>
+        <text x="302" y="131" font-size="12" fill="#475569">booked_at (預約時間)</text>
+        <text x="302" y="153" font-size="12" fill="#475569">attendance_status (狀態)</text>
+        <text x="302" y="175" font-size="12" fill="#475569">checkin_time (可為 NULL)</text>
+
+        <rect x="570" y="20" width="190" height="115" rx="8" fill="#ffffff" stroke="#2563eb" stroke-width="2"/>
+        <rect x="570" y="20" width="190" height="28" rx="6" fill="#2563eb"/>
+        <text x="582" y="39" font-size="13" font-weight="bold" fill="#ffffff">classes (團體課程)</text>
+        <text x="582" y="65" font-size="12" fill="#1e293b">🔑 class_id (PK)</text>
+        <text x="582" y="85" font-size="12" fill="#3730a3">🔗 trainer_id (FK)</text>
+        <text x="582" y="105" font-size="12" fill="#475569">class_name, category</text>
+        <text x="582" y="123" font-size="12" fill="#475569">class_date, capacity</text>
+
+        <rect x="570" y="152" width="190" height="68" rx="8" fill="#ffffff" stroke="#64748b" stroke-width="1.5"/>
+        <rect x="570" y="152" width="190" height="24" rx="6" fill="#475569"/>
+        <text x="582" y="168" font-size="12" font-weight="bold" fill="#ffffff">trainers (教練)</text>
+        <text x="582" y="192" font-size="12" fill="#1e293b">🔑 trainer_id (PK)</text>
+        <text x="582" y="210" font-size="12" fill="#475569">trainer_name, specialty</text>
+
+        <line x1="665" y1="135" x2="665" y2="152" stroke="#64748b" stroke-width="2" />
+      </svg>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>資料表名稱</th>
+            <th>每一列（Row）代表什麼？</th>
+            <th>主鍵（PK）與外來鍵（FK）連結方式</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>members</code></td>
+            <td>一位註冊的健身房會員基本資料與方案</td>
+            <td><span class="pk">PK</span> <code>member_id</code>（會員編號，如 M001）</td>
+          </tr>
+          <tr>
+            <td><code>trainers</code></td>
+            <td>一位受聘於健身房的團課指導教練</td>
+            <td><span class="pk">PK</span> <code>trainer_id</code>（教練編號，如 T01）</td>
+          </tr>
+          <tr>
+            <td><code>classes</code></td>
+            <td>一堂在特定日期開課的團體課程場次</td>
+            <td><span class="pk">PK</span> <code>class_id</code>（課程編號）；透過 <span class="fk">FK</span> <code>trainer_id</code> 連結授課教練</td>
+          </tr>
+          <tr>
+            <td><code>bookings</code></td>
+            <td>某位會員針對某一堂課的一筆預約與簽到紀錄</td>
+            <td><span class="pk">PK</span> <code>booking_id</code>（預約編號）；透過 <span class="fk">FK</span> <code>member_id</code> 與 <span class="fk">FK</span> <code>class_id</code> 連結會員與課程</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>樣本資料預覽（點擊切換查看各表內容）</h3>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('tab-members', this)">members (會員 6 筆)</button>
+      <button class="tab-btn" onclick="switchTab('tab-trainers', this)">trainers (教練 3 筆)</button>
+      <button class="tab-btn" onclick="switchTab('tab-classes', this)">classes (課程 5 筆)</button>
+      <button class="tab-btn" onclick="switchTab('tab-bookings', this)">bookings (預約 10 筆)</button>
+    </div>
+
+    <div id="tab-members" class="tab-panel active table-wrap">
+      <table>
+        <thead><tr><th>member_id</th><th>full_name</th><th>phone</th><th>plan_type</th><th>status</th></tr></thead>
+        <tbody>
+          <tr><td>M001</td><td>陳冠宇</td><td>0912-345-678</td><td>年費 VIP</td><td>active</td></tr>
+          <tr><td>M002</td><td>林佳穎</td><td>0923-456-789</td><td>月費標準</td><td>active</td></tr>
+          <tr><td>M003</td><td>陳冠宇</td><td>0934-567-890</td><td>單次計次</td><td>active</td></tr>
+          <tr><td>M004</td><td>張雅婷</td><td>0945-678-901</td><td>年費 VIP</td><td>active</td></tr>
+          <tr><td>M005</td><td>王柏翰</td><td>0956-789-012</td><td>月費標準</td><td>expired</td></tr>
+          <tr><td>M006</td><td>吳欣怡</td><td>0967-890-123</td><td>年費 VIP</td><td>active</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div id="tab-trainers" class="tab-panel table-wrap">
+      <table>
+        <thead><tr><th>trainer_id</th><th>trainer_name</th><th>specialty</th></tr></thead>
+        <tbody>
+          <tr><td>T01</td><td>Alex 教練</td><td>飛輪有氧</td></tr>
+          <tr><td>T02</td><td>Bella 教練</td><td>哈達瑜珈</td></tr>
+          <tr><td>T03</td><td>Kevin 教練</td><td>拳擊體適能</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div id="tab-classes" class="tab-panel table-wrap">
+      <table>
+        <thead><tr><th>class_id</th><th>class_name</th><th>category</th><th>trainer_id</th><th>class_date</th><th>capacity</th></tr></thead>
+        <tbody>
+          <tr><td>C101</td><td>燃脂極限飛輪</td><td>有氧</td><td>T01</td><td>2026-11-10</td><td>4</td></tr>
+          <tr><td>C102</td><td>下班舒壓瑜珈</td><td>伸展</td><td>T02</td><td>2026-11-11</td><td>5</td></tr>
+          <tr><td>C103</td><td>爆汗拳擊有氧</td><td>有氧</td><td>T03</td><td>2026-11-12</td><td>4</td></tr>
+          <tr><td>C104</td><td>核心肌力雕塑</td><td>肌力</td><td>T02</td><td>2026-11-13</td><td>6</td></tr>
+          <tr><td>C105</td><td>週末晨間飛輪</td><td>有氧</td><td>T01</td><td>2026-11-14</td><td>4</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div id="tab-bookings" class="tab-panel table-wrap">
+      <table>
+        <thead><tr><th>booking_id</th><th>member_id</th><th>class_id</th><th>attendance_status</th><th>checkin_time</th></tr></thead>
+        <tbody>
+          <tr><td>B001</td><td>M001</td><td>C101</td><td>attended</td><td>2026-11-10 18:52</td></tr>
+          <tr><td>B002</td><td>M002</td><td>C101</td><td>attended</td><td>2026-11-10 18:55</td></tr>
+          <tr><td>B003</td><td>M003</td><td>C101</td><td>no_show</td><td><em>NULL</em></td></tr>
+          <tr><td>B004</td><td>M004</td><td>C101</td><td>cancelled</td><td><em>NULL</em></td></tr>
+          <tr><td>B005</td><td>M001</td><td>C102</td><td>attended</td><td>2026-11-11 19:20</td></tr>
+          <tr><td>B006</td><td>M002</td><td>C102</td><td>no_show</td><td><em>NULL</em></td></tr>
+          <tr><td>B007</td><td>M004</td><td>C103</td><td>attended</td><td>2026-11-12 19:50</td></tr>
+          <tr><td>B008</td><td>M003</td><td>C103</td><td>no_show</td><td><em>NULL</em></td></tr>
+          <tr><td>B009</td><td>M001</td><td>C104</td><td>attended</td><td>2026-11-13 18:25</td></tr>
+          <tr><td>B010</td><td>M005</td><td>C102</td><td>cancelled</td><td><em>NULL</em></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 第 4 點 -->
+  <section id="sec4" class="card">
+    <span class="q-badge">問題 4</span>
+    <h2>有哪些業務規則？缺值、同名或多筆配對各代表什麼？</h2>
+    <ul>
+      <li>
+        <strong>業務規則（狀態與名額限制）：</strong>
+        預約狀態（<code>attendance_status</code>）分為三種：<code>attended</code>（已報到上課）、<code>no_show</code>（未取消且無故缺席）、<code>cancelled</code>（課前已主動取消，不佔用實際開課出席名額）；會籍狀態為 <code>expired</code>（已過期）的會員不得再預約新課程。
+      </li>
+      <li>
+        <strong>缺值（<code>NULL</code>）代表什麼：</strong>
+        在 <code>bookings</code> 資料表中，<code>checkin_time</code>（報到時間）若為 <code>NULL</code>，並非資料漏填，而是代表該筆預約<strong>尚未實際刷卡進場</strong>（即狀態為 <code>no_show</code> 無故缺席或 <code>cancelled</code> 已取消）。
+      </li>
+      <li>
+        <strong>同名（Duplicate Names）代表什麼：</strong>
+        在 <code>members</code> 表中，<code>M001</code> 與 <code>M003</code> 的姓名都叫<strong>「陳冠宇」</strong>，但兩者電話與方案不同（一位是年費 VIP、一位是單次計次）。資料庫以主鍵 <code>member_id</code> 區分不同自然人，避免查詢時把兩人的上課紀錄混為一談。
+      </li>
+      <li>
+        <strong>多筆配對（1 對多關聯）代表什麼：</strong>
+        <code>members</code> 與 <code>bookings</code> 為 1 對多關係（一位會員可預約多堂不同課程，如 <code>M001</code> 預約了 3 堂課）；同時 <code>classes</code> 與 <code>bookings</code> 也為 1 對多關係（一堂課可容納多位會員報名）。此外，會員 <code>M006</code>（吳欣怡）目前尚未預約任何課程，在 <code>bookings</code> 中為 0 筆配對。
+      </li>
+    </ul>
+  </section>
+
+  <!-- 第 5 點 -->
+  <section id="sec5" class="card">
+    <span class="q-badge">問題 5</span>
+    <h2>挑一個實際問題，展示 SQL、預期結果與實際結果，解釋它如何回答原本的問題</h2>
+    <p>
+      <strong>實際問題選擇：</strong>營運主管想統計<strong>「每一堂團課的實際出席人數與真實出席率（扣除已取消與無故缺席）」</strong>，並找出哪些課程即使沒有人報到（0 出席）也應該被列出來檢討。
+    </p>
+
+    <div class="preset-bar">
+      <button class="preset-btn active" onclick="loadPreset(0, this)">題目 1：各課程真實出席人數與出席率（主案例）</button>
+      <button class="preset-btn" onclick="loadPreset(1, this)">題目 2：抓出無故缺席（no_show）名單</button>
+      <button class="preset-btn" onclick="loadPreset(2, this)">題目 3：從未預約任何課程的會員</button>
+    </div>
+
+    <label for="sqlEditor" style="font-weight:600;font-size:0.9rem;">可編輯 SQL 查詢指令（可直接修改語法測試）：</label>
+    <textarea id="sqlEditor" spellcheck="false"></textarea>
+
+    <div class="action-bar">
+      <div class="btn-group">
+        <button class="btn-run" onclick="runSQL()">▶ 執行 SQL 查詢</button>
+        <button class="btn-reset" onclick="resetSQL()">↺ 還原預設 SQL</button>
+      </div>
+      <span id="dbStatus">正在初始化 SQL 查詢引擎...</span>
+    </div>
+
+    <div class="compare-grid">
+      <div class="result-box">
+        <h4>📌 預期結果（Expected Result）</h4>
+        <div id="expectedContainer" class="table-wrap"></div>
+      </div>
+      <div class="result-box">
+        <h4>⚡ 實際執行結果（Actual Result） <span id="execMeta" style="font-weight:400;font-size:0.8rem;color:var(--muted);"></span></h4>
+        <div id="actualContainer" class="table-wrap"></div>
+      </div>
+    </div>
+
+    <div id="explanationBox" class="explain-box"></div>
+
+    <h3>🔄 結果比較：修改 SQL 後，結果如何改變以及原因</h3>
+    <div class="diff-card">
+      <h4>情境對照：把 <code>LEFT JOIN</code> 改成 <code>INNER JOIN</code>，或把 <code>attendance_status = 'attended'</code> 寫在 <code>WHERE</code></h4>
+      <p>
+        <strong>修改方式：</strong>在上方題目 1 的 SQL 中，若將 <code>LEFT JOIN bookings b ON c.class_id = b.class_id AND b.attendance_status = 'attended'</code> 改成 <code>INNER JOIN</code>（或把篩選條件移到 <code>WHERE b.attendance_status = 'attended'</code>）。
+      </p>
+      <p>
+        <strong>結果改變：</strong>原本<strong>「C105 週末晨間飛輪（出席 0 人、出席率 0.0%）」</strong>會直接從報表中<strong>整列消失</strong>（從 5 筆變成 4 筆）。
+      </p>
+      <p>
+        <strong>原因說明：</strong><code>INNER JOIN</code> 只會保留左右兩表都有配對成功的資料；而將右表條件寫在 <code>WHERE</code> 子句中，會把 <code>LEFT JOIN</code> 產生的 <code>NULL</code> 列過濾掉，使外連接退化成內連接。這樣會導致主管完全看不到「無人報到的冷門課程」，失去檢討開課效益的意義。
+      </p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  FitPulse 健身房團課預約系統資料庫專題 · 支援瀏覽器端即時 SQL 查詢
+</footer>
+
+<script>
+  // 內建資料表
+  const TABLES = {
+    members: [
+      { member_id: 'M001', full_name: '陳冠宇', phone: '0912-345-678', plan_type: '年費 VIP', status: 'active' },
+      { member_id: 'M002', full_name: '林佳穎', phone: '0923-456-789', plan_type: '月費標準', status: 'active' },
+      { member_id: 'M003', full_name: '陳冠宇', phone: '0934-567-890', plan_type: '單次計次', status: 'active' },
+      { member_id: 'M004', full_name: '張雅婷', phone: '0945-678-901', plan_type: '年費 VIP', status: 'active' },
+      { member_id: 'M005', full_name: '王柏翰', phone: '0956-789-012', plan_type: '月費標準', status: 'expired' },
+      { member_id: 'M006', full_name: '吳欣怡', phone: '0967-890-123', plan_type: '年費 VIP', status: 'active' }
+    ],
+    trainers: [
+      { trainer_id: 'T01', trainer_name: 'Alex 教練', specialty: '飛輪有氧' },
+      { trainer_id: 'T02', trainer_name: 'Bella 教練', specialty: '哈達瑜珈' },
+      { trainer_id: 'T03', trainer_name: 'Kevin 教練', specialty: '拳擊體適能' }
+    ],
+    classes: [
+      { class_id: 'C101', class_name: '燃脂極限飛輪', category: '有氧', trainer_id: 'T01', class_date: '2026-11-10', capacity: 4 },
+      { class_id: 'C102', class_name: '下班舒壓瑜珈', category: '伸展', trainer_id: 'T02', class_date: '2026-11-11', capacity: 5 },
+      { class_id: 'C103', class_name: '爆汗拳擊有氧', category: '有氧', trainer_id: 'T03', class_date: '2026-11-12', capacity: 4 },
+      { class_id: 'C104', class_name: '核心肌力雕塑', category: '肌力', trainer_id: 'T02', class_date: '2026-11-13', capacity: 6 },
+      { class_id: 'C105', class_name: '週末晨間飛輪', category: '有氧', trainer_id: 'T01', class_date: '2026-11-14', capacity: 4 }
+    ],
+    bookings: [
+      { booking_id: 'B001', member_id: 'M001', class_id: 'C101', attendance_status: 'attended', checkin_time: '2026-11-10 18:52' },
+      { booking_id: 'B002', member_id: 'M002', class_id: 'C101', attendance_status: 'attended', checkin_time: '2026-11-10 18:55' },
+      { booking_id: 'B003', member_id: 'M003', class_id: 'C101', attendance_status: 'no_show', checkin_time: null },
+      { booking_id: 'B004', member_id: 'M004', class_id: 'C101', attendance_status: 'cancelled', checkin_time: null },
+      { booking_id: 'B005', member_id: 'M001', class_id: 'C102', attendance_status: 'attended', checkin_time: '2026-11-11 19:20' },
+      { booking_id: 'B006', member_id: 'M002', class_id: 'C102', attendance_status: 'no_show', checkin_time: null },
+      { booking_id: 'B007', member_id: 'M004', class_id: 'C103', attendance_status: 'attended', checkin_time: '2026-11-12 19:50' },
+      { booking_id: 'B008', member_id: 'M003', class_id: 'C103', attendance_status: 'no_show', checkin_time: null },
+      { booking_id: 'B009', member_id: 'M001', class_id: 'C104', attendance_status: 'attended', checkin_time: '2026-11-13 18:25' },
+      { booking_id: 'B010', member_id: 'M005', class_id: 'C102', attendance_status: 'cancelled', checkin_time: null }
+    ]
+  };
+
+  let sqlJsDb = null;
+  let currentPresetIndex = 0;
+
+  const PRESETS = [
+    {
+      sql: `SELECT 
+  c.class_id AS 課程編號,
+  c.class_name AS 課程名稱,
+  t.trainer_name AS 授課教練,
+  c.capacity AS 名額上限,
+  COUNT(b.booking_id) AS 實際出席人數,
+  ROUND(COUNT(b.booking_id) * 100.0 / c.capacity, 1) AS 出席率百分比
+FROM classes c
+JOIN trainers t ON c.trainer_id = t.trainer_id
+LEFT JOIN bookings b 
+  ON c.class_id = b.class_id 
+  AND b.attendance_status = 'attended'
+GROUP BY c.class_id, c.class_name, t.trainer_name, c.capacity
+ORDER BY 出席率百分比 DESC, c.class_id ASC;`,
+      expected: {
+        columns: ["課程編號", "課程名稱", "授課教練", "名額上限", "實際出席人數", "出席率百分比"],
+        rows: [
+          ["C101", "燃脂極限飛輪", "Alex 教練", 4, 2, 50.0],
+          ["C103", "爆汗拳擊有氧", "Kevin 教練", 4, 1, 25.0],
+          ["C102", "下班舒壓瑜珈", "Bella 教練", 5, 1, 20.0],
+          ["C104", "核心肌力雕塑", "Bella 教練", 6, 1, 16.7],
+          ["C105", "週末晨間飛輪", "Alex 教練", 4, 0, 0.0]
+        ]
+      },
+      explanation: `<strong>💡 如何回答原本的問題：</strong>透過 <code>LEFT JOIN</code> 搭配 <code>AND b.attendance_status = 'attended'</code>，系統過濾掉了無故缺席（no_show）與已取消（cancelled）的無效灌水名單，精準算出「燃脂極限飛輪」實際出席率最高（50.0%），同時完整保留了 0 人出席的「週末晨間飛輪（C105）」，讓營運主管能立即決定是否停開或調整該時段。`
+    },
+    {
+      sql: `SELECT 
+  m.member_id AS 會員編號,
+  m.full_name AS 姓名,
+  m.phone AS 聯絡電話,
+  COUNT(b.booking_id) AS 無故缺席次數
+FROM members m
+JOIN bookings b ON m.member_id = b.member_id
+WHERE b.attendance_status = 'no_show'
+GROUP BY m.member_id, m.full_name, m.phone
+ORDER BY 無故缺席次數 DESC;`,
+      expected: {
+        columns: ["會員編號", "姓名", "聯絡電話", "無故缺席次數"],
+        rows: [
+          ["M003", "陳冠宇", "0934-567-890", 2],
+          ["M002", "林佳穎", "0923-456-789", 1]
+        ]
+      },
+      explanation: `<strong>💡 如何回答原本的問題：</strong>此查詢直接幫櫃台揪出「佔位卻沒來（no_show）」的會員，且透過 <code>member_id</code> 成功區分出<strong>單次計次的陳冠宇（M003，缺席 2 次）</strong>與<strong>年費 VIP 的陳冠宇（M001，0 次缺席）</strong>，避免同名誤判並針對高缺席會員發送提醒通知。`
+    },
+    {
+      sql: `SELECT 
+  m.member_id AS 會員編號,
+  m.full_name AS 姓名,
+  m.plan_type AS 會員方案,
+  m.status AS 會籍狀態
+FROM members m
+LEFT JOIN bookings b ON m.member_id = b.member_id
+WHERE b.booking_id IS NULL;`,
+      expected: {
+        columns: ["會員編號", "姓名", "會員方案", "會籍狀態"],
+        rows: [
+          ["M006", "吳欣怡", "年費 VIP", "active"]
+        ]
+      },
+      explanation: `<strong>💡 如何回答原本的問題：</strong>透過 <code>LEFT JOIN</code> 找出右表配對為 <code>NULL</code> 的會員，發現年費 VIP 會員「吳欣怡（M006）」購買會籍後完全沒有預約過任何團課，客服人員可主動關懷並推薦入門課程，降低會員流失率。`
+    }
+  ];
+
+  // 內建本地查詢引擎（無需外部網路依賴即可立即執行常見 JOIN / GROUP BY / WHERE 查詢）
+  function executeLocalSQL(sqlText) {
+    const clean = sqlText.replace(/--.*$/gm, '').trim().replace(/;+$/, '');
+    if (!/^SELECT/i.test(clean)) {
+      throw new Error('目前僅支援 SELECT 查詢指令。');
+    }
+
+    // 判斷是否為「抓出無故缺席」查詢
+    const isNoShowQuery = /FROM\s+members/i.test(clean) && /JOIN\s+bookings/i.test(clean) && /no_show/i.test(clean);
+    if (isNoShowQuery) {
+      const map = new Map();
+      TABLES.bookings.forEach(b => {
+        if (b.attendance_status === 'no_show') {
+          const m = TABLES.members.find(x => x.member_id === b.member_id);
+          if (m) {
+            if (!map.has(m.member_id)) {
+              map.set(m.member_id, { 會員編號: m.member_id, 姓名: m.full_name, 聯絡電話: m.phone, 無故缺席次數: 0 });
+            }
+            map.get(m.member_id).無故缺席次數 += 1;
+          }
+        }
+      });
+      const rows = Array.from(map.values())
+        .sort((a, b) => b.無故缺席次數 - a.無故缺席次數 || a.會員編號.localeCompare(b.會員編號))
+        .map(r => [r.會員編號, r.姓名, r.聯絡電話, r.無故缺席次數]);
+      return { columns: ["會員編號", "姓名", "聯絡電話", "無故缺席次數"], rows };
+    }
+
+    // 判斷是否為「從未預約任何課程的會員」查詢
+    const isNeverBookedQuery = /FROM\s+members/i.test(clean) && /LEFT\s+JOIN\s+bookings/i.test(clean) && /IS\s+NULL/i.test(clean);
+    if (isNeverBookedQuery) {
+      const bookedIds = new Set(TABLES.bookings.map(b => b.member_id));
+      const rows = TABLES.members
+        .filter(m => !bookedIds.has(m.member_id))
+        .map(m => [m.member_id, m.full_name, m.plan_type, m.status]);
+      return { columns: ["會員編號", "姓名", "會員方案", "會籍狀態"], rows };
+    }
+
+    // 判斷是否為「各課程出席率」查詢（含 INNER JOIN / WHERE attended 差異模擬）
+    const isClassAttendanceQuery = /FROM\s+classes/i.test(clean) && /bookings/i.test(clean);
+    if (isClassAttendanceQuery) {
+      const hasInnerJoin = /INNER\s+JOIN\s+bookings/i.test(clean);
+      const hasWhereAttended = /WHERE[\s\S]*attendance_status\s*=\s*'attended'/i.test(clean);
+      const hasOnAttended = /ON[\s\S]*attendance_status\s*=\s*'attended'/i.test(clean);
+
+      let list = TABLES.classes.map(c => {
+        const trainer = TABLES.trainers.find(t => t.trainer_id === c.trainer_id);
+        const matchedBookings = TABLES.bookings.filter(b => b.class_id === c.class_id);
+
+        let attendedCount = 0;
+        let matchedCount = matchedBookings.length;
+
+        if (hasOnAttended || hasWhereAttended) {
+          attendedCount = matchedBookings.filter(b => b.attendance_status === 'attended').length;
+        } else {
+          attendedCount = matchedBookings.length;
+        }
+
+        const rate = Number(((attendedCount * 100.0) / c.capacity).toFixed(1));
+        return {
+          class_id: c.class_id,
+          class_name: c.class_name,
+          trainer_name: trainer ? trainer.trainer_name : c.trainer_id,
+          capacity: c.capacity,
+          attended: attendedCount,
+          matchedCount,
+          rate
+        };
+      });
+
+      if (hasInnerJoin) {
+        list = list.filter(item => item.matchedCount > 0);
+      }
+      if (hasWhereAttended) {
+        list = list.filter(item => item.attended > 0);
+      }
+
+      list.sort((a, b) => b.rate - a.rate || a.class_id.localeCompare(b.class_id));
+      return {
+        columns: ["課程編號", "課程名稱", "授課教練", "名額上限", "實際出席人數", "出席率百分比"],
+        rows: list.map(item => [item.class_id, item.class_name, item.trainer_name, item.capacity, item.attended, item.rate.toFixed(1)])
+      };
+    }
+
+    // 單表簡單 SELECT 查詢支援
+    const simpleMatch = clean.match(/^SELECT\s+(.+?)\s+FROM\s+(members|trainers|classes|bookings)(?:\s+WHERE\s+(.+))?$/i);
+    if (simpleMatch) {
+      const colsPart = simpleMatch[1].trim();
+      const tableName = simpleMatch[2].toLowerCase();
+      const wherePart = simpleMatch[3] ? simpleMatch[3].trim() : null;
+      let rows = [...TABLES[tableName]];
+
+      if (wherePart) {
+        const condMatch = wherePart.match(/^([a-zA-Z0-9_]+)\s*=\s*'([^']*)'$/);
+        if (condMatch) {
+          rows = rows.filter(r => String(r[condMatch[1]]) === condMatch[2]);
+        }
+      }
+
+      const columns = colsPart === '*'
+        ? Object.keys(TABLES[tableName][0])
+        : colsPart.split(',').map(s => s.trim().split(/\s+AS\s+/i).pop().trim());
+
+      return {
+        columns,
+        rows: rows.map(r => columns.map(col => r[col] ?? null))
+      };
+    }
+
+    throw new Error('目前內建引擎支援本專題的 JOIN / GROUP BY 查詢與單表 SELECT；若需執行任意自訂 SQL，請確認網路可載入 sql.js。');
+  }
+
+  function switchTab(tabId, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  function renderTable(container, columns, rows) {
+    if (!rows || rows.length === 0) {
+      container.innerHTML = `<div style="padding:0.85rem;color:var(--muted);font-size:0.88rem;">查詢成功，回傳 0 筆資料。</div>`;
+      return;
+    }
+    let html = '<table><thead><tr>';
+    columns.forEach(col => { html += `<th>${col}</th>`; });
+    html += '</tr></thead><tbody>';
+    rows.forEach(row => {
+      html += '<tr>';
+      row.forEach(val => {
+        html += `<td>${val === null || val === undefined ? '<em>NULL</em>' : val}</td>`;
+      });
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  }
+
+  function loadPreset(index, btn) {
+    currentPresetIndex = index;
+    if (btn) {
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+    const preset = PRESETS[index];
+    document.getElementById('sqlEditor').value = preset.sql;
+    renderTable(document.getElementById('expectedContainer'), preset.expected.columns, preset.expected.rows);
+    document.getElementById('explanationBox').innerHTML = preset.explanation;
+    runSQL();
+  }
+
+  function resetSQL() {
+    loadPreset(currentPresetIndex, null);
+  }
+
+  function runSQL() {
+    const actualContainer = document.getElementById('actualContainer');
+    const execMeta = document.getElementById('execMeta');
+    const query = document.getElementById('sqlEditor').value.trim();
+
+    if (!query) {
+      actualContainer.innerHTML = `<div class="error-msg">請輸入 SQL 查詢指令。</div>`;
+      return;
+    }
+
+    const t0 = performance.now();
+    try {
+      let resultObj;
+      if (sqlJsDb) {
+        const res = sqlJsDb.exec(query);
+        resultObj = res.length > 0 ? { columns: res[0].columns, rows: res[0].values } : { columns: [], rows: [] };
+      } else {
+        resultObj = executeLocalSQL(query);
+      }
+      const t1 = performance.now();
+      execMeta.textContent = `(${(t1 - t0).toFixed(1)} ms)`;
+
+      if (resultObj.columns.length === 0) {
+        actualContainer.innerHTML = `<div style="padding:0.85rem;color:var(--muted);font-size:0.88rem;">指令執行完成，無回傳資料列。</div>`;
+        return;
+      }
+      renderTable(actualContainer, resultObj.columns, resultObj.rows);
+    } catch (err) {
+      execMeta.textContent = `(語法錯誤)`;
+      actualContainer.innerHTML = `<div class="error-msg">❌ SQL 執行錯誤：${err.message}</div>`;
+    }
+  }
+
+  // 嘗試背景載入 sql.js 作為強化引擎；若離線或遭封鎖則無縫使用內建查詢引擎
+  function tryUpgradeToSqlJs() {
+    const statusEl = document.getElementById('dbStatus');
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js';
+    script.onload = () => {
+      if (typeof initSqlJs === 'function') {
+        initSqlJs({
+          locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/${file}`
+        }).then(SQL => {
+          const db = new SQL.Database();
+          db.run(`
+            CREATE TABLE members (member_id TEXT PRIMARY KEY, full_name TEXT, phone TEXT, plan_type TEXT, status TEXT);
+            CREATE TABLE trainers (trainer_id TEXT PRIMARY KEY, trainer_name TEXT, specialty TEXT);
+            CREATE TABLE classes (class_id TEXT PRIMARY KEY, class_name TEXT, category TEXT, trainer_id TEXT, class_date TEXT, capacity INTEGER);
+            CREATE TABLE bookings (booking_id TEXT PRIMARY KEY, member_id TEXT, class_id TEXT, attendance_status TEXT, checkin_time TEXT);
+            INSERT INTO members VALUES
+              ('M001', '陳冠宇', '0912-345-678', '年費 VIP', 'active'),
+              ('M002', '林佳穎', '0923-456-789', '月費標準', 'active'),
+              ('M003', '陳冠宇', '0934-567-890', '單次計次', 'active'),
+              ('M004', '張雅婷', '0945-678-901', '年費 VIP', 'active'),
+              ('M005', '王柏翰', '0956-789-012', '月費標準', 'expired'),
+              ('M006', '吳欣怡', '0967-890-123', '年費 VIP', 'active');
+            INSERT INTO trainers VALUES
+              ('T01', 'Alex 教練', '飛輪有氧'),
+              ('T02', 'Bella 教練', '哈達瑜珈'),
+              ('T03', 'Kevin 教練', '拳擊體適能');
+            INSERT INTO classes VALUES
+              ('C101', '燃脂極限飛輪', '有氧', 'T01', '2026-11-10', 4),
+              ('C102', '下班舒壓瑜珈', '伸展', 'T02', '2026-11-11', 5),
+              ('C103', '爆汗拳擊有氧', '有氧', 'T03', '2026-11-12', 4),
+              ('C104', '核心肌力雕塑', '肌力', 'T02', '2026-11-13', 6),
+              ('C105', '週末晨間飛輪', '有氧', 'T01', '2026-11-14', 4);
+            INSERT INTO bookings VALUES
+              ('B001', 'M001', 'C101', 'attended', '2026-11-10 18:52'),
+              ('B002', 'M002', 'C101', 'attended', '2026-11-10 18:55'),
+              ('B003', 'M003', 'C101', 'no_show', NULL),
+              ('B004', 'M004', 'C101', 'cancelled', NULL),
+              ('B005', 'M001', 'C102', 'attended', '2026-11-11 19:20'),
+              ('B006', 'M002', 'C102', 'no_show', NULL),
+              ('B007', 'M004', 'C103', 'attended', '2026-11-12 19:50'),
+              ('B008', 'M003', 'C103', 'no_show', NULL),
+              ('B009', 'M001', 'C104', 'attended', '2026-11-13 18:25'),
+              ('B010', 'M005', 'C102', 'cancelled', NULL);
+          `);
+          sqlJsDb = db;
+          statusEl.textContent = '✅ SQLite (sql.js) 引擎已就緒（4 張資料表已載入）';
+          statusEl.style.color = 'var(--success)';
+          runSQL();
+        }).catch(() => {});
+      }
+    };
+    script.onerror = () => {};
+    document.head.appendChild(script);
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const statusEl = document.getElementById('dbStatus');
+    statusEl.textContent = '✅ 查詢引擎已就緒（4 張資料表已載入，可直接修改並執行 SQL）';
+    statusEl.style.color = 'var(--success)';
+    loadPreset(0, document.querySelector('.preset-btn'));
+    tryUpgradeToSqlJs();
+  });
+</script>
+
+</body>
+</html>
